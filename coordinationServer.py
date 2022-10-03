@@ -2,7 +2,7 @@ import socket
 
 MAX_CLIENT = 10
 
-state = ["Hello", "Auth", "InvalidAuth", "WatchJoin", "Watching", "Terminated"]
+state = ["Hello", "Auth", "AuthSuccess" "InvalidAuth", "WatchJoin", "Watching", "Terminated"]
 testCreds = [["test", "test"]]
 def server_program():
     # get the hostname
@@ -28,14 +28,19 @@ def server_program():
             msg = "Server Hello|Auth"
             conn.send(msg.encode())
         elif "Client Auth{" in data: # Client Auth{login|password}
+            curState = state[1]
             msg = data.split("{", 1)[1][:-1]
             creds = msg.split("|", 1)
             loginCred = creds[0]
             passCred = creds[1]
             if [loginCred, passCred] in testCreds:
                 conn.send("auth Success".encode())
+                curState = state[2]
+            else:
+                conn.send("auth Failure".encode())
+                curState = state[3]
 
-        conn.send(data.encode())  # send data to the client
+        #conn.send(data.encode())  # send data to the client
 
     conn.close()  # close the connection
 
