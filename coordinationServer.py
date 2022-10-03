@@ -2,6 +2,8 @@ import socket
 
 MAX_CLIENT = 10
 
+state = ["Hello", "Auth", "InvalidAuth", "WatchJoin", "Watching", "Terminated"]
+testCreds = [["test", "test"]]
 def server_program():
     # get the hostname
     host = "localhost" #socket.gethostname()
@@ -21,8 +23,18 @@ def server_program():
         if not data:
             # if data is not received break
             break
-        print("from connected user: " + str(data))
-        data = input(' -> ')
+        if data == "Client Hello":
+            curState = state[0]
+            msg = "Server Hello|Auth"
+            conn.send(msg.encode())
+        elif "Client Auth{" in data: # Client Auth{login|password}
+            msg = data.split("{", 1)[1][:-1]
+            creds = msg.split("|", 1)
+            loginCred = creds[0]
+            passCred = creds[1]
+            if [loginCred, passCred] in testCreds:
+                conn.send("auth Success".encode())
+
         conn.send(data.encode())  # send data to the client
 
     conn.close()  # close the connection
