@@ -1,4 +1,5 @@
 import socket
+import ssl
 
 MAX_CLIENT = 10
 
@@ -10,6 +11,11 @@ def server_program():
     port = 12545  # initiate port no above 1024
 
     server_socket = socket.socket()  # get instance
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    server = ssl.wrap_socket(
+    server, server_side=True, keyfile="path/to/keyfile", certfile="path/to/certfile"
+)
     # look closely. The bind() function takes tuple as argument
     server_socket.bind((host, port))  # bind host address and port together
 
@@ -39,6 +45,7 @@ def server_program():
             else:
                 conn.send("auth Failure".encode())
                 curState = state[3]
+                conn.close()
 
         #conn.send(data.encode())  # send data to the client
 
