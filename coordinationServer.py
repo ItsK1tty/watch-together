@@ -1,38 +1,65 @@
 import socket
 import ssl
 import _thread
+import os
+from pymongo import MongoClient
+
+MOVIE_PATH = "C://movie_test"
+
+groupStarted = False
+groupMembers = []
+
+def getAvailableMovies():
+    result = ""
+    for item in os.listdir(MOVIE_PATH):
+        moviePath = os.path.join(MOVIE_PATH, item)
+        if os.path.isdir(moviePath):
+            result += item + "{"
+            for file in os.listdir(moviePath):
+                result += file + ","
+            result = result[:-1]+"},"
+    result = result[:-1]
+    return result
+
 
 def on_new_client(conn,addr):
+    authed = False
     while True:
         data = conn.recv(1024).decode()
         if not data:
             # if data is not received break
             break
         if data == "Client Hello":
-            curState = state[0]
+            curState = states[0]
             msg = "Server Hello|Auth"
             conn.send(msg.encode())
         elif "Client Auth{" in data: # Client Auth{login|password}
-            curState = state[1]
+            curState = states[1]
             msg = data.split("{", 1)[1][:-1]
             creds = msg.split("|", 1)
             loginCred = creds[0]
             passCred = creds[1]
             if [loginCred, passCred] in testCreds:
                 conn.send("auth Success".encode())
-                curState = state[2]
+                authed = True
+                curState = states[2]
             else:
                 conn.send("auth Failure".encode())
-                curState = state[3]
+                curState = states[3]
                 conn.close()
+        elif data == "MovieSync" and authed:
+            curState = states[4]
+            message = "MovieSync|" + getAvailableMovies()
+            conn.send(message.encode())
+            print(message)
         elif data == "bye":
-            curState = state[6]
+            curState = states[7]
             conn.send("bye".encode())
     conn.close()  # close the connection
 
 MAX_CLIENT = 10
 
-state = ["Hello", "Auth", "AuthSuccess" "InvalidAuth", "WatchJoin", "Watching", "Terminated"]
+states = ["Hello", "Auth", "AuthSuccess", "InvalidAuth", "Synchronizing", "WatchJoin", "Watching", "Terminated"]
 testCreds = [["test", "test"]]
 def server_program():
     # get the hostname
