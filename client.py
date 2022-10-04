@@ -1,6 +1,5 @@
 import socket
 import ssl
-import pprint
 
 loginCred = "test"
 passCred = "test"
@@ -19,19 +18,24 @@ def client_program():
     message = "Client Hello"
 
     while message.lower().strip() != 'bye':
-        sslsocket.send(message.encode())  # send message
+        if message != "waiting":
+            sslsocket.send(message.encode())  # send message
         data = sslsocket.recv(1024).decode()  # receive response
 
         if data == "Server Hello|Auth":
             message = "Client Auth{"+loginCred+"|"+passCred+"}"
-            sslsocket.send(message.encode())
+            #sslsocket.send(message.encode())
         elif data == "auth Success":
             print("Auth success")
-
-            break
+            message = "MovieSync"
         elif data == "auth Failure":
             print("Auth failed")
             break
+        elif "MovieSync|" in data:
+            print(data)
+            message = "waiting"
+        
+            
 
 
         #message = input(" -> ")  # again take input
