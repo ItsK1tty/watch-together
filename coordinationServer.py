@@ -13,8 +13,8 @@ def server_program():
     server_socket = socket.socket()  # get instance
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    server = ssl.wrap_socket(
-    server, server_side=True, keyfile="path/to/keyfile", certfile="path/to/certfile"
+    server_socket = ssl.wrap_socket(
+    server_socket, server_side=True, keyfile="server.key", certfile="server.crt"
 )
     # look closely. The bind() function takes tuple as argument
     server_socket.bind((host, port))  # bind host address and port together
@@ -46,6 +46,9 @@ def server_program():
                 conn.send("auth Failure".encode())
                 curState = state[3]
                 conn.close()
+        elif data == "bye":
+            curState = state[6]
+            conn.send("bye".encode())
 
         #conn.send(data.encode())  # send data to the client
 

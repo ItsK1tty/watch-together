@@ -350,6 +350,7 @@ MigrationBackup/
 .ionide/
 
 
-sub-ca
-root-ca
-server-ca
+*.crt
+*.csr
+*.key
+*.key.org

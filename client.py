@@ -1,5 +1,6 @@
 import socket
 import ssl
+import pprint
 
 loginCred = "test"
 passCred = "test"
@@ -12,31 +13,32 @@ def client_program():
     client_socket = socket.socket()  # instantiate
     client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    client_socket = ssl.wrap_socket(client_socket, keyfile="path/to/keyfile", certfile="path/to/certfile")
+    sslsocket = ssl.wrap_socket(client_socket)
 
-    client_socket.connect((host, port))  # connect to the server
-
-    #message = input(" -> ")  # take input
+    sslsocket.connect((host, port))  # connect to the server
     message = "Client Hello"
 
     while message.lower().strip() != 'bye':
-        client_socket.send(message.encode())  # send message
-        data = client_socket.recv(1024).decode()  # receive response
+        sslsocket.send(message.encode())  # send message
+        data = sslsocket.recv(1024).decode()  # receive response
 
         if data == "Server Hello|Auth":
             message = "Client Auth{"+loginCred+"|"+passCred+"}"
-            client_socket.send(message.encode())
+            sslsocket.send(message.encode())
         elif data == "auth Success":
             print("Auth success")
 
+            break
         elif data == "auth Failure":
             print("Auth failed")
-            client_socket.close()
+            break
 
 
         #message = input(" -> ")  # again take input
 
-    client_socket.close()  # close the connection
+    sslsocket.shutdown(socket.SHUT_RDWR)
+    sslsocket.close()
+    client_socket.close()
 
 
 if __name__ == '__main__':
